@@ -148,24 +148,6 @@ int main()
             // (ie, it's much harder when
             //  enemies move after the player)
 
-            // player movement
-            if(inp == 'w')
-            {
-                p.x -= 1;
-            }
-            else if(inp == 's')
-            {
-                p.x += 1;
-            }
-            else if(inp == 'a')
-            {
-                p.y -= 1;
-            }
-            else if(inp == 'd')
-            {
-                p.y += 1;
-            }
-
             // enemy movement
             for(i=0; i<level; i++)
             {
@@ -211,6 +193,24 @@ int main()
                         }
                     }
                 }
+            }
+
+            // player movement
+            if(inp == 'w')
+            {
+                p.x -= 1;
+            }
+            else if(inp == 's')
+            {
+                p.x += 1;
+            }
+            else if(inp == 'a')
+            {
+                p.y -= 1;
+            }
+            else if(inp == 'd')
+            {
+                p.y += 1;
             }
 
             game = update_grid(game, grid, p, es, level);
