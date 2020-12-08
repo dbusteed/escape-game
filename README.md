@@ -11,3 +11,6 @@
 
 ## notes
 * i only tested this on Linux, so i dunno how it will behave with other OSs / compilers
+
+## todo
+make a "blockade" version where enemies pop up nearby, but don't actually chase the player. i think this is what i was initially invisioning when i started
