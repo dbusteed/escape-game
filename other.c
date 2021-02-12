@@ -33,6 +33,7 @@ void print_menu();
 bool check_enemy_position(Army es[], int posX, int posY, int level);
 void print_grid(char grid[X][Y], int level, char border[]);
 Game update_grid(Game game, char grid[X][Y], Army p, Army es[], int level);
+Army place_enemy(Army p, char inp, Army es[], int i);
 
 int main()
 {
@@ -65,14 +66,13 @@ int main()
         }
     }
 
-    // `level` corresponds to the # of enemies
-    int level = 1;
+    int enemies = 100;
 
     // the player
     Army p;
 
     // the (e)nemie(s)
-    Army *es = malloc(level * sizeof(Army));
+    Army *es = malloc(enemies * sizeof(Army));
 
     print_menu();
 
@@ -86,52 +86,22 @@ int main()
         p.x = X / 2;
         p.y = Y / 2;
 
-        es = realloc(es, level * sizeof(Army)); 
+        es = realloc(es, enemies * sizeof(Army)); 
 
         // setup positions for the enemies
-        for(i=0; i<level; i++)
+        for(i=0; i<enemies; i++)
         {
-            valid_pos = false;
-            while(!valid_pos)
-            {
-                enemy_pos = false;
-                posX = (rand() % X);
-                posY = (rand() % Y);
-
-                // check if near Player
-                if((posX >= ((X / 2) - 1) && posX <= ((X / 2) + 1)) && ((posY >= ((Y / 2) - 1) && posY <= ((Y / 2) + 1))))
-                {
-                    // invalid position
-                }
-                else
-                {
-                    // check previous enemy positions
-                    for(j=0; j<i; j++)
-                    {
-                        if(posX == es[j].x && posY == es[j].y)
-                        {
-                            enemy_pos = true;
-                        }
-                    }
-
-                    if(enemy_pos)
-                    {
-                        valid_pos = false;
-                    }
-                    else
-                    {
-                        valid_pos = true;
-                    }
-                }
-            }
-
-            es[i].x = posX;
-            es[i].y = posY;
+            es[i].x = -1;
+            es[i].y = -1;
         }
 
+        es[0] = place_enemy(p, "w", es, i);
+
         // build grid and print
-        update_grid(game, grid, p, es, level);
-        print_grid(grid, level, border);
+        update_grid(game, grid, p, es, enemies);
+        print_grid(grid, enemies, border);
+
+        int moves = 1;
 
         // game loop for the current level
         while(game.playing)
@@ -141,59 +111,6 @@ int main()
             scanf("%c", &inp);
             getchar();
             printf("\n");
-
-            // switch the order of 
-            // player movement and enemy movement
-            // to adjust difficulty
-            // (ie, it's much harder when
-            //  enemies move after the player)
-
-            // enemy movement
-            for(i=0; i<level; i++)
-            {
-                // check if the enemy is located where the player is
-                // (happens if the player moves into the enemy)
-                if( es[i].x == p.x && es[i].y == p.y )
-                {
-                    // pass, this will be handled later
-                }
-                
-                // should the enemy move vertically or horizontally?
-                else if( abs(es[i].x - p.x) > abs(es[i].y - p.y) )
-                {
-                    if(es[i].x > p.x)
-                    {
-                        if(check_enemy_position(es, es[i].x - 1, es[i].y, level))
-                        {
-                            es[i].x -= 1;
-                        }
-                    }
-                    else
-                    {
-                        if(check_enemy_position(es, es[i].x + 1, es[i].y, level))
-                        {
-                            es[i].x += 1;
-                        }
-                    }
-                }
-                else
-                {
-                    if(es[i].y > p.y)
-                    {
-                        if(check_enemy_position(es, es[i].x, es[i].y - 1, level))
-                        {
-                            es[i].y -= 1;
-                        }
-                    }
-                    else
-                    {
-                        if(check_enemy_position(es, es[i].x, es[i].y + 1, level))
-                        {
-                            es[i].y += 1;
-                        }
-                    }
-                }
-            }
 
             // player movement
             if(inp == 'w')
@@ -213,8 +130,11 @@ int main()
                 p.y += 1;
             }
 
-            game = update_grid(game, grid, p, es, level);
-            print_grid(grid, level, border);
+            es[moves] = place_enemy(p, inp, es, moves);
+            moves += 1;
+
+            game = update_grid(game, grid, p, es, enemies);
+            print_grid(grid, enemies, border);
         }
 
         if(game.won)
@@ -223,7 +143,7 @@ int main()
             printf("press ENTER to start next level...");
             getchar();
 
-            level += 1;
+            enemies += 1;
         }
         else
         {
@@ -290,7 +210,10 @@ Game update_grid(Game game, char grid[X][Y], Army p, Army es[], int level)
     // draw enemies
     for(i=0; i<level; i++)
     {
-        grid[es[i].x][es[i].y] = ENEMY;
+        if(es[i].x > -1 && es[i].y > -1)
+        {
+            grid[es[i].x][es[i].y] = ENEMY;
+        }
 
         // check if enemy collided with player
         if(es[i].x == p.x && es[i].y == p.y)
@@ -328,8 +251,6 @@ void print_grid(char grid[X][Y], int level, char border[])
 
     system("clear");
 
-    printf("Level %2d\n\n", level);
-
     printf("%s\n", border);
 
     // side border, grid characters, side border
@@ -344,4 +265,54 @@ void print_grid(char grid[X][Y], int level, char border[])
     }
 
     printf("%s\n", border);
+}
+
+Army place_enemy(Army p, char inp, Army es[], int i)
+{
+    bool valid_pos, enemy_pos;
+    int j, posX, posY;
+    
+    
+
+    // change X, Y to be a certain bounds
+
+    valid_pos = false;
+    while(!valid_pos)
+    {
+        enemy_pos = false;
+        posX = (rand() % X);
+        posY = (rand() % Y);
+
+        // check if near Player
+        if((posX >= ((p.x) - 1) && posX <= ((p.x) + 1)) && ((posY >= ((p.y) - 1) && posY <= ((p.y) + 1))))
+        {
+            // invalid position
+        }
+        else
+        {
+            // check previous enemy positions
+            for(j=0; j<i; j++)
+            {
+                if(posX == es[j].x && posY == es[j].y)
+                {
+                    enemy_pos = true;
+                }
+            }
+
+            if(enemy_pos)
+            {
+                valid_pos = false;
+            }
+            else
+            {
+                valid_pos = true;
+            }
+        }
+    }
+
+    Army tmp;
+    tmp.x = posX;
+    tmp.y = posY;
+
+    return tmp;
 }
